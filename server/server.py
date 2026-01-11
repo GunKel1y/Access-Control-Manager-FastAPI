@@ -18,14 +18,16 @@ from database.schemas import AccessStatus, RequestsUsers, RequestsResources, \
     RequestsAccesses, RequestAccessToUpdate, ResponsesUsers, ResponsesResources, ResponsesAccesses, RequestUserToUpdate, \
     RequestResourceToUpdate
 
-app = FastAPI()
+
+
+app = FastAPI(title="Access Control Manager")
 Base.metadata.create_all(bind=engine)
 
 
 
 @app.get("/users", response_model=List[ResponsesUsers])
-async def get_users(search: Annotated[str | None, Query(title="Поиск по имени или почте пользователя")] = None,
-                    is_active: Annotated[bool | None, Query(title="Признак активности пользователя")] = None,
+async def get_users(search: Annotated[str, Query(title="Поиск по имени или почте пользователя")] = None,
+                    is_active: Annotated[bool, Query(title="Признак активности пользователя")] = None,
                     db: Session = Depends(get_db)):
 
     query = db.query(UserModel)
@@ -86,9 +88,10 @@ async def create_users(user_data: RequestsUsers, db: Session = Depends(get_db)):
     return append_user
 
 @app.patch('/users/{user_id}', response_model=ResponsesUsers)
-async def partial_update_resource(user_id: UUID | None,
-                                  update_user_data: RequestUserToUpdate,
-                                  db: Session = Depends(get_db)):
+async def partial_update_user(
+        user_id: Annotated[UUID, Path(title="ID пользователя")],
+        update_user_data: RequestUserToUpdate,
+        db: Session = Depends(get_db)):
     query = db.query(UserModel)
 
     user = query.filter(UserModel.id == user_id).first()
@@ -113,7 +116,7 @@ async def partial_update_resource(user_id: UUID | None,
 
 
 @app.get("/resources", response_model=List[ResponsesResources])
-async def get_resources(is_enabled: Annotated[bool | None, Query(title="Признак активности ресурса")] = None,
+async def get_resources(is_enabled: Annotated[bool, Query(title="Признак активности ресурса")] = None,
                         db: Session = Depends(get_db)):
 
     query = db.query(ResourcesModel)
@@ -189,11 +192,10 @@ async def partial_update_resource(resource_id: UUID | None,
 
 
 @app.get("/access", response_model=List[ResponsesAccesses])
-async def get_access(user_id: Annotated[UUID | None, Query(title="ID владельца доступа")] = None,
-                     resource_id: Annotated[UUID | None, Query(title="ID ресурса")] = None,
-                     status: Annotated[AccessStatus | None, Query(title="Дата/время выдачи доступа")] = None,
-                     active: Annotated[bool | None, Query(title="Дата/время истечения доступа")] | None = None,
-                     expires_at: Annotated[str | None, Query(title="Текущее состояние доступа")] = None,
+async def get_access(user_id: Annotated[UUID, Query(title="ID владельца доступа")] = None,
+                     resource_id: Annotated[UUID, Query(title="ID ресурса")] = None,
+                     status: Annotated[AccessStatus, Query(title="Текущее состояние доступа")] = None,
+                     expires_at: Annotated[str, Query(title="Дата/время истечения доступа")] = None,
                      db: Session = Depends(get_db)):
 
     update_access_status(db)
@@ -208,9 +210,6 @@ async def get_access(user_id: Annotated[UUID | None, Query(title="ID владе�
 
     if status:
         query = query.filter(AccessModel.status == status)
-
-    if active:
-        query = query.filter(AccessModel.active == active)
 
     if expires_at:
         date_format = "%d.%m.%Y %H:%M"
@@ -259,21 +258,19 @@ async def create_access(access_data: RequestsAccesses, db: Session = Depends(get
                                 detail=f"Для указанного пользователя уже имеется доступ к данному ресурсу.")
 
 
-    try:
-        expires_at = datetime.fromisoformat(access_data.expires_at)
-    except Exception:
-        raise HTTPException(status_code=400,
-                            detail="Неверный формат даты. Требуется формат ISO 8601, например: 2025-11-15T03:00:00Z")
+    granted_at = datetime.now(timezone.utc)
+    expires_at = access_data.expires_at
 
+    if isinstance(expires_at, str):
+        expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
 
-    granted_at = datetime.now()
-    if  expires_at < granted_at:
-        raise HTTPException(status_code=400, detail="Дата окончания не может быть раньше даты выдачи доступа")
+    if  access_data.expires_at <= granted_at:
+        raise HTTPException(status_code=400, detail="Дата окончания не может быть раньше или равна дате выдачи доступа")
 
 
     access_db = AccessModel(user_id=user.id,
                             resource_id=resource.id,
-                            expires_at=access_data.expires_at,
+                            expires_at=expires_at,
                             status=access_data.status,
                             comment=access_data.comment)
 
@@ -284,7 +281,7 @@ async def create_access(access_data: RequestsAccesses, db: Session = Depends(get
     return access_db
 
 @app.patch("/access/{access_id}", response_model=ResponsesAccesses)
-async def partial_update_access(access_id: Annotated[UUID, Path(..., title="ID доступа")],
+async def partial_update_access(access_id: Annotated[UUID, Path(title="ID доступа")],
                                 update_access_data: RequestAccessToUpdate,
                                 db: Session = Depends(get_db)):
     query = db.query(AccessModel)
@@ -296,16 +293,14 @@ async def partial_update_access(access_id: Annotated[UUID, Path(..., title="ID �
         raise HTTPException(status_code=400, detail=f"Статус доступа не активен, внести изменения невозможно")
 
     now = datetime.now(timezone.utc)
+    expires_at = update_access_data.expires_at
 
     if update_access_data.expires_at:
-        try:
-            expires_at = datetime.fromisoformat(update_access_data.expires_at)
-        except ValueError:
-            raise HTTPException(status_code=400, detail=f"Неверный формат даты. Требуется формат ISO 8601, например: 2025-11-15T03:00:00Z")
-        access.expires_at = update_access_data.expires_at
-        if update_access_data.expires_at < now and update_access_data.status == AccessStatus.ACTIVE:
+        if isinstance(expires_at, str):
+            expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+        if expires_at < now and update_access_data.status == AccessStatus.ACTIVE:
             raise HTTPException(status_code=400, detail="При указанном статусе дата окончания не может быть раньше текущей даты")
-        access.status = update_access_data.status
+        access.expires_at = expires_at
 
 
     if update_access_data.status:
