@@ -1,6 +1,7 @@
 from uuid import UUID
 from datetime import datetime, timezone
 
+import uvicorn
 from fastapi import FastAPI, HTTPException, Path, Query
 from fastapi.params import Depends
 
@@ -202,6 +203,10 @@ async def get_access(user_id: Annotated[UUID, Query(title="ID владельца
 
     query = db.query(AccessModel)
 
+    if not query.all():
+        raise HTTPException(status_code=404, detail="Доступы не найдены")
+
+
     if user_id:
         query = query.filter(AccessModel.user_id == user_id)
 
@@ -299,7 +304,10 @@ async def partial_update_access(access_id: Annotated[UUID, Path(title="ID дос
         if isinstance(expires_at, str):
             expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
         if expires_at < now and update_access_data.status == AccessStatus.ACTIVE:
-            raise HTTPException(status_code=400, detail="При указанном статусе дата окончания не может быть раньше текущей даты")
+            raise HTTPException(
+                status_code=400,
+                detail="При указанном статусе дата окончания не может быть раньше текущей даты"
+            )
         access.expires_at = expires_at
 
 
@@ -326,6 +334,7 @@ async def partial_update_access(access_id: Annotated[UUID, Path(title="ID дос
 
     return access
 
-
+if __name__ == "__main__":
+    uvicorn.run("server.server:app", host="0.0.0.0")
 
 
