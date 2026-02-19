@@ -1,0 +1,28 @@
+
+from typing import Annotated
+from pydantic import BaseModel, Field
+from uuid import UUID
+
+
+
+class BaseResources(BaseModel):
+    class Config:
+        orm_mode = True
+
+
+class RequestsResources(BaseResources):
+    name: Annotated[str, Field(..., title='Название ресурса', min_length=2, max_length=100)]
+    description: Annotated[str, Field(title='Описание ресурса', max_length=2000)]
+    is_enabled: Annotated[bool, Field(True, title='Признак активности ресурса')]
+
+
+class RequestResourceToUpdate(BaseResources):
+    description: Annotated[str, Field(None, title='Описание ресурса', max_length=2000)]
+    is_enabled: Annotated[bool, Field(True, title='Признак активности ресурса')]
+
+
+class ResponsesResources(BaseResources):
+    id: Annotated[UUID, Field(title='ID ресурса')]
+    name: Annotated[str, Field(title='Название ресурса', min_length=2, max_length=100)]
+    description: Annotated[str, Field(None, title='Описание ресурса', max_length=2000)]
+    is_enabled: Annotated[bool, Field(title='Признак активности ресурса')]
