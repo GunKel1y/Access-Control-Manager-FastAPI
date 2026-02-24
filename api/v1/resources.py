@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from models.resources import ResourcesModel
+from service.resources_service import ResourcesService
 from schemas.resources import RequestsResources, RequestResourceToUpdate, ResponsesResources
 from core.database import get_db
 
@@ -24,15 +25,14 @@ async def get_resources(name: Annotated[str, Query(title="Название ре�
                         db: Session = Depends(get_db)):
 
 
-    query = db.query(ResourcesModel)
-
-    if is_enabled is not None:
-        query = query.filter(ResourcesModel.is_enabled == is_enabled)
+    service = ResourcesService(db)
 
     if name is not None:
-        query = query.filter(ResourcesModel.name == name)
+        service.get_all_resource(name=name)
+    if is_enabled is not None:
+        service.get_all_resource(is_enabled=is_enabled)
 
-    return query.all()
+    return service.get_all_resource(name=name, is_enabled=is_enabled)
 
 
 @router.get("/{resource_id}", response_model=ResponsesResources)
@@ -40,10 +40,10 @@ async def get_resources_item(resource_id: Annotated[UUID, Path(..., title="ID р
                              db: Session = Depends(get_db)):
 
 
-    query = db.query(ResourcesModel)
+    service = ResourcesService(db)
 
-    resource = query.filter(ResourcesModel.id == resource_id).first()
-    if not resource:
+    resource = service.get_by_id(resource_id)
+    if resource is None:
         raise HTTPException(status_code=404, detail=f"Ресурс с указанным ID не найден")
 
     return resource
@@ -53,22 +53,14 @@ async def get_resources_item(resource_id: Annotated[UUID, Path(..., title="ID р
 async def create_resources(resources_data: RequestsResources, db: Session = Depends(get_db)):
 
 
-    query = db.query(ResourcesModel)
+    service = ResourcesService(db)
 
-    duplicate_resource = query.filter(func.lower(ResourcesModel.name) == resources_data.name.lower()).first()
-    if duplicate_resource is not None:
+    if service.is_duplicate_name(resources_data.name):
         raise HTTPException(status_code=409, detail="Ресурс с указанным названием уже существует")
 
-    append_resource = ResourcesModel(
-        name=resources_data.name,
-        description=resources_data.description,
-        is_enabled=resources_data.is_enabled)
+    resource = create_resources(resources_data)
 
-    db.add(append_resource)
-    db.commit()
-    db.refresh(append_resource)
-
-    return append_resource
+    return resource
 
 
 @router.patch("/{resource_id}", response_model=ResponsesResources)
@@ -77,14 +69,13 @@ async def partial_update_resource(resource_id: UUID,
                                   db: Session = Depends(get_db)):
 
 
-    query = db.query(ResourcesModel)
+    service = ResourcesService(db)
 
-    resource = query.filter(ResourcesModel.id == resource_id).first()
+    resource = service.get_by_id(resource_id)
     if not resource:
         raise HTTPException(status_code=404, detail=f"Ресурс с указанным ID {resource_id} не найден")
 
-    if update_resource_data.is_enabled is None:
-        resource.is_enabled = update_resource_data.is_enabled
+    service.update_resource(update_data=update_resource_data, resource_id=resource_id)
 
     db.commit()
     db.refresh(resource)

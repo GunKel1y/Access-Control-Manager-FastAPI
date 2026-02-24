@@ -22,7 +22,7 @@ class UserService:
         self.db.refresh(user)
         return user
 
-    def update_user(self, user_id, update_data):
+    def update_user(self, *, user_id, update_data):
 
         user = self.repo.get_by_id(user_id)
 
@@ -35,7 +35,7 @@ class UserService:
     def get_user(self, user_id):
         return self.repo.get_by_id(user_id)
 
-    def get_all_users(self, search, is_active):
+    def get_all_users(self, *, search, is_active):
         return self.repo.get_all(search, is_active)
 
 

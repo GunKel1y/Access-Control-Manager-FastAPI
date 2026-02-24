@@ -36,7 +36,7 @@ class UsersRepository:
 
     def create_user(self, create_data):
         user = UserModel(
-            email=create_data.email,
+            email=create_data.email.strip(),
             full_name=create_data.full_name.strip(),
             is_active=create_data.is_active
         )

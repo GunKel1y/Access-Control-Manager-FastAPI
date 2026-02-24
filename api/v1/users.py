@@ -27,7 +27,7 @@ async def get_users(search: Annotated[str, Query(title="Поиск по имен
 
 
     service = UserService(db)
-    users = service.get_all_users(search, is_active)
+    users = service.get_all_users(search=search, is_active=is_active)
 
     return users
 
@@ -75,7 +75,7 @@ async def partial_update_user(
         raise HTTPException(status_code=404, detail=f"Пользователь с указанным ID не найден")
 
     if update_user_data.is_active is not None:
-        service.update_user(user_id, update_user_data)
+        service.update_user(user_id=user_id, update_data=update_user_data)
 
     return user
 
