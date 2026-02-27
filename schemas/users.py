@@ -1,13 +1,12 @@
 
 from typing import Annotated
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from uuid import UUID
 
 
 
 class BaseUser(BaseModel):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RequestsUsers(BaseUser):

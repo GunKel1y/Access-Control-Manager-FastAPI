@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 
 from repository.resources_repository import ResourcesRepository
 
@@ -32,4 +33,14 @@ class ResourcesService:
 
         self.db.commit()
         self.db.refresh(resource)
+        return resource
+
+    def check_resource_for_access(self, resource_id):
+        resource = self.repo.get_by_id(resource_id)
+
+        if resource is None:
+            raise HTTPException(status_code=404, detail="Ресурс с указанным ID не найден")
+        if resource == "not enabled":
+            raise HTTPException(status_code=422, detail="Ресурс с указанным ID неактивен")
+
         return resource

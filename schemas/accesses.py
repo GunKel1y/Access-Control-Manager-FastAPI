@@ -14,14 +14,16 @@ class AccessStatus(str, Enum):
 
 
 class BaseAccess(BaseModel):
-    granted_at: datetime
-    expires_at: datetime
-
-    class Config:
-        orm_mode = True
-        json_encoders = {
-            datetime: lambda v: v.astimezone(timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z')
+    model_config = {
+        "from_attributes": True,
+        "json_encoders": {
+            datetime: lambda v: (
+                v.astimezone(timezone.utc)
+                .isoformat(timespec="seconds")
+                .replace("+00:00", "Z")
+            )
         }
+    }
 
 
 class RequestsAccesses(BaseAccess):
@@ -33,9 +35,9 @@ class RequestsAccesses(BaseAccess):
 
 
 class RequestAccessToUpdate(BaseAccess):
-    expires_at: Annotated[datetime, Field(None, title="Дата/время истечения доступа")]
-    status: Annotated[AccessStatus, Field(AccessStatus.ACTIVE, title="Текущее состояние доступа")]
-    comment: Annotated[str, Field(None, title="Примечание администратора", max_length=2000)]
+    expires_at: Annotated[Optional[datetime], Field(None, title="Дата/время истечения доступа")]
+    status: Annotated[Optional[AccessStatus], Field(AccessStatus.ACTIVE, title="Текущее состояние доступа")]
+    comment: Annotated[Optional[str], Field(None, title="Примечание администратора", max_length=2000)]
 
 
 class ResponsesAccesses(BaseAccess):

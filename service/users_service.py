@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 
 from repository.users_repository import UsersRepository
 
@@ -38,4 +39,13 @@ class UserService:
     def get_all_users(self, *, search, is_active):
         return self.repo.get_all(search, is_active)
 
+    def check_user_for_access(self, user_id):
+        user = self.repo.get_by_id(user_id)
+
+        if user is None:
+            raise HTTPException(status_code=404, detail=f"Пользователь с указанным ID не найден")
+        if user == "not active":
+            raise HTTPException(status_code=422, detail=f"Пользователь с указанным ID неактивен")
+
+        return "not active"
 
