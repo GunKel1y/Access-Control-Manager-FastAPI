@@ -16,7 +16,7 @@ class RequestsResources(BaseResources):
 
 
 class RequestResourceToUpdate(BaseResources):
-    description: Annotated[str, Field("", title='Описание ресурса', max_length=2000)]
+    description: Annotated[str, Field(None, title='Описание ресурса', max_length=2000)]
     is_enabled: Annotated[bool, Field(None, title='Признак активности ресурса')]
 
 

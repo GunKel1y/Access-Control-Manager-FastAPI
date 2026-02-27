@@ -27,11 +27,6 @@ async def get_resources(name: Annotated[str, Query(title="Название ре�
 
     service = ResourcesService(db)
 
-    if name is not None:
-        service.get_all_resource(name=name)
-    if is_enabled is not None:
-        service.get_all_resource(is_enabled=is_enabled)
-
     return service.get_all_resource(name=name, is_enabled=is_enabled)
 
 
@@ -42,11 +37,7 @@ async def get_resources_item(resource_id: Annotated[UUID, Path(..., title="ID р
 
     service = ResourcesService(db)
 
-    resource = service.get_by_id(resource_id)
-    if resource is None:
-        raise HTTPException(status_code=404, detail=f"Ресурс с указанным ID не найден")
-
-    return resource
+    return service.get_by_id(resource_id)
 
 
 @router.post("", response_model=ResponsesResources)
@@ -55,12 +46,7 @@ async def create_resources(resources_data: RequestsResources, db: Session = Depe
 
     service = ResourcesService(db)
 
-    if service.is_duplicate_name(resources_data.name):
-        raise HTTPException(status_code=409, detail="Ресурс с указанным названием уже существует")
-
-    resource = create_resources(resources_data)
-
-    return resource
+    return service.create_resource(resources_data)
 
 
 @router.patch("/{resource_id}", response_model=ResponsesResources)
@@ -71,13 +57,4 @@ async def partial_update_resource(resource_id: UUID,
 
     service = ResourcesService(db)
 
-    resource = service.get_by_id(resource_id)
-    if not resource:
-        raise HTTPException(status_code=404, detail=f"Ресурс с указанным ID {resource_id} не найден")
-
-    service.update_resource(update_data=update_resource_data, resource_id=resource_id)
-
-    db.commit()
-    db.refresh(resource)
-
-    return resource
+    return service.update_resource(update_data=update_resource_data, resource_id=resource_id)
