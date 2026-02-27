@@ -39,11 +39,7 @@ async def get_user(user_id: Annotated[UUID, Path(..., title="ID пользова
 
     service = UserService(db)
 
-    user = service.get_user(user_id)
-    if user is None:
-        raise HTTPException(status_code=404, detail=f"Пользователь с указанным ID не найден")
-
-    return user
+    return service.get_user(user_id)
 
 
 @router.post("", response_model=ResponsesUsers)
@@ -52,11 +48,6 @@ async def create_users(user_data: RequestsUsers, db: Session = Depends(get_db)):
 
     service = UserService(db)
     user = service.create_user(user_data)
-
-    if user == "email":
-        raise HTTPException(status_code=409, detail='Пользователь с указанным значением email уже существует')
-    if user == "full_name":
-        raise HTTPException(status_code=409, detail='Пользователь с указанным значением full_name уже существует')
 
     return user
 
@@ -70,12 +61,5 @@ async def partial_update_user(
 
     service = UserService(db)
 
-    user = service.get_user(user_id)
-    if user is None:
-        raise HTTPException(status_code=404, detail=f"Пользователь с указанным ID не найден")
-
-    if update_user_data.is_active is not None:
-        service.update_user(user_id=user_id, update_data=update_user_data)
-
-    return user
+    return service.update_user(user_id=user_id, update_data=update_user_data)
 

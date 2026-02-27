@@ -12,10 +12,10 @@ class UserService:
     def create_user(self, user_data):
 
         if self.repo.get_by_email(user_data.email):
-            return "email"
+            raise HTTPException(status_code=409, detail='Пользователь с указанным значением email уже существует')
 
         if self.repo.get_by_name(user_data.full_name):
-            return "full_name"
+            raise HTTPException(status_code=409, detail='Пользователь с указанным значением full_name уже существует')
 
         user = self.repo.create_user(user_data)
 
@@ -26,7 +26,11 @@ class UserService:
     def update_user(self, *, user_id, update_data):
 
         user = self.repo.get_by_id(user_id)
+        if user is None:
+            raise HTTPException(status_code=404, detail=f"Пользователь с указанным ID не найден")
 
+        if update_data.is_active is None:
+            raise HTTPException(status_code=400, detail='Параметр is_active должен хранить булевое значение')
         user.is_active = update_data.is_active
 
         self.db.commit()
@@ -34,7 +38,10 @@ class UserService:
         return user
 
     def get_user(self, user_id):
-        return self.repo.get_by_id(user_id)
+        user = self.repo.get_by_id(user_id)
+        if user is None:
+            raise HTTPException(status_code=404, detail=f"Пользователь с указанным ID не найден")
+        return user
 
     def get_all_users(self, *, search, is_active):
         return self.repo.get_all(search, is_active)
