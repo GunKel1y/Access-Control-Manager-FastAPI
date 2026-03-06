@@ -63,3 +63,14 @@ async def partial_update_user(
 
     return service.update_user(user_id=user_id, update_data=update_user_data)
 
+
+@router.delete("/{user_id}", response_model=ResponsesUsers)
+async def delete_user(
+        user_id: Annotated[UUID, Path(title="ID пользователя")],
+        db: Session = Depends(get_db)):
+
+
+    service = UserService(db)
+
+    return service.delete_user(user_id)
+

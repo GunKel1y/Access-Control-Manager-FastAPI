@@ -55,3 +55,14 @@ class ResourcesService:
             raise HTTPException(status_code=422, detail="Ресурс с указанным ID неактивен")
 
         return resource
+
+    def delete_resource(self, resource_id):
+        resource = self.repo.get_by_id(resource_id)
+
+        if resource is None:
+            raise HTTPException(status_code=404, detail="Ресурс с указанным ID не найден")
+
+        self.repo.delete(resource)
+        self.db.commit()
+
+        return resource

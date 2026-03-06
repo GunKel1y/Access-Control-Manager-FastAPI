@@ -1,5 +1,5 @@
 
-from typing import Annotated, Optional
+from typing import Annotated
 from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from uuid import UUID
 

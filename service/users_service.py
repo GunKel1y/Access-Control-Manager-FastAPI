@@ -56,3 +56,14 @@ class UserService:
 
         return "not active"
 
+    def delete_user(self, user_id):
+        user = self.repo.get_by_id(user_id)
+
+        if user is None:
+            raise HTTPException(status_code=404, detail="Пользователь с указанным ID не найден")
+
+        self.repo.delete(user)
+        self.db.commit()
+
+        return user
+

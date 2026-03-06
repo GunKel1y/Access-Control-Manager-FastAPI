@@ -90,5 +90,15 @@ class AccessesService:
         self.db.refresh(access)
         return access
 
+    def delete_access(self, access_id):
+        access = self.repo.get_by_id(access_id)
+
+        if access is None:
+            raise HTTPException(status_code=404, detail="Доступ с указанным ID не найден")
+
+        self.repo.delete(access)
+        self.db.commit()
+
+        return access
 
 

@@ -1,4 +1,3 @@
-from dns.e164 import query
 
 from models.accesses import AccessModel
 from datetime import datetime
@@ -59,3 +58,6 @@ class AccessesRepository:
             synchronize_session=False
         )
         self.database.flush()
+
+    def delete(self, access_id):
+        self.database.delete(access_id)

@@ -39,3 +39,6 @@ class ResourcesRepository:
         if self.database.query(ResourcesModel).filter(func.lower(ResourcesModel.name) == name.lower()).first() is None:
             return False
         return True
+
+    def delete(self, resource_id):
+        self.database.delete(resource_id)

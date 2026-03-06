@@ -78,3 +78,13 @@ async def partial_update_access(access_id: Annotated[UUID, Path(title="ID дос
     return service.update_access(access_id=access_id, update_data=update_access_data)
 
 
+@router.delete("/{access_id}", response_model=ResponsesAccesses)
+async def delete_access(
+        access_id: Annotated[UUID, Path(title="ID доступа")],
+        db: Session = Depends(get_db)):
+
+    service = AccessesService(db)
+
+    return service.delete_access(access_id)
+
+

@@ -58,3 +58,13 @@ async def partial_update_resource(resource_id: UUID,
     service = ResourcesService(db)
 
     return service.update_resource(update_data=update_resource_data, resource_id=resource_id)
+
+@router.delete("/{resource_id}", response_model=ResponsesResources)
+async def delete_resource(
+        resource_id: Annotated[UUID, Path(title="ID ресурса")],
+        db: Session = Depends(get_db)):
+
+
+    service = ResourcesService(db)
+
+    return service.delete_resource(resource_id)
