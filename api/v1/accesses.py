@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, Path, Query
 from fastapi.params import Depends
 
 from sqlalchemy.orm import Session
@@ -7,10 +7,8 @@ from sqlalchemy.orm import Session
 from typing import List, Annotated
 from uuid import UUID
 
-from datetime import datetime, timezone
-
-from models.accesses import AccessModel
-from schemas.accesses import RequestsAccesses, RequestAccessToUpdate, ResponsesAccesses, AccessStatus
+from schemas.accesses import RequestsAccesses, RequestAccessToUpdate, ResponsesAccesses, AccessStatus, \
+    ResponseDeleteAccesses
 from service.access_service import AccessesService
 from service.users_service import UserService
 from service.resources_service import ResourcesService
@@ -78,7 +76,7 @@ async def partial_update_access(access_id: Annotated[UUID, Path(title="ID дос
     return service.update_access(access_id=access_id, update_data=update_access_data)
 
 
-@router.delete("/{access_id}", response_model=ResponsesAccesses)
+@router.delete("/{access_id}", response_model=ResponseDeleteAccesses)
 async def delete_access(
         access_id: Annotated[UUID, Path(title="ID доступа")],
         db: Session = Depends(get_db)):

@@ -31,13 +31,13 @@ class RequestsAccesses(BaseAccess):
     resource_id: Annotated[UUID, Field(..., title="ID ресурса")]
     expires_at: Annotated[datetime, Field(..., title="Дата/время истечения доступа")]
     status: Annotated[AccessStatus, Field(AccessStatus.ACTIVE, title="Текущее состояние доступа")]
-    comment: Annotated[str, Field(None, title="Примечание администратора", max_length=2000)]
+    comment: Annotated[str, Field("", title="Примечание администратора", max_length=2000)]
 
 
 class RequestAccessToUpdate(BaseAccess):
-    expires_at: Annotated[Optional[datetime], Field(None, title="Дата/время истечения доступа")]
+    expires_at: Annotated[Optional[datetime], Field(title="Дата/время истечения доступа")] = None
     status: Annotated[Optional[AccessStatus], Field(AccessStatus.ACTIVE, title="Текущее состояние доступа")]
-    comment: Annotated[Optional[str], Field(None, title="Примечание администратора", max_length=2000)]
+    comment: Annotated[Optional[str], Field("", title="Примечание администратора", max_length=2000)]
 
 
 class ResponsesAccesses(BaseAccess):
@@ -47,4 +47,9 @@ class ResponsesAccesses(BaseAccess):
     granted_at: Annotated[datetime, Field(title="Дата/время выдачи доступа")]
     expires_at: Annotated[datetime, Field(title="Дата/время истечения доступа")]
     status: Annotated[AccessStatus, Field(title="Текущее состояние доступа")]
-    comment: Annotated[Optional[str], Field(None, title="Примечание администратора", max_length=2000)]
+    comment: Annotated[Optional[str], Field("", title="Примечание администратора", max_length=2000)]
+
+
+class ResponseDeleteAccesses(BaseAccess):
+    id: Annotated[UUID, Field(title='ID доступа')]
+    del_status: Annotated[str, Field('Удален', title='Статус удаления')]

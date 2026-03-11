@@ -25,3 +25,8 @@ class ResponsesResources(BaseResources):
     name: Annotated[str, Field(title='Название ресурса', min_length=2, max_length=100)]
     description: Annotated[Optional[str], Field("", title='Описание ресурса', max_length=2000)]
     is_enabled: Annotated[bool, Field(title='Признак активности ресурса')]
+
+
+class ResponseDeleteResources(BaseResources):
+    id: Annotated[UUID, Field(title='ID ресурса')]
+    del_status: Annotated[str, Field('Удален', title='Статус удаления')]

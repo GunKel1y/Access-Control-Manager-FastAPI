@@ -1,16 +1,14 @@
 
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, Path, Query
 from fastapi.params import Depends
 
 from typing import List, Annotated
 from uuid import UUID
 
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
-from models.resources import ResourcesModel
 from service.resources_service import ResourcesService
-from schemas.resources import RequestsResources, RequestResourceToUpdate, ResponsesResources
+from schemas.resources import RequestsResources, RequestResourceToUpdate, ResponsesResources, ResponseDeleteResources
 from core.database import get_db
 
 
@@ -59,7 +57,7 @@ async def partial_update_resource(resource_id: UUID,
 
     return service.update_resource(update_data=update_resource_data, resource_id=resource_id)
 
-@router.delete("/{resource_id}", response_model=ResponsesResources)
+@router.delete("/{resource_id}", response_model=ResponseDeleteResources)
 async def delete_resource(
         resource_id: Annotated[UUID, Path(title="ID ресурса")],
         db: Session = Depends(get_db)):

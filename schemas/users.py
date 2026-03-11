@@ -24,3 +24,8 @@ class ResponsesUsers(BaseUser):
     email: Annotated[str, Field( title='Электронная почта пользователя')]
     full_name: Annotated[str, Field(title='Ф.И.О. пользователя')]
     is_active: Annotated[bool, Field(title='Признак активности пользователя')]
+
+
+class ResponseDeleteUsers(BaseUser):
+    id: Annotated[UUID, Field(title='ID пользователя')]
+    del_status: Annotated[str, Field('Удален', title='Статус удаления')]

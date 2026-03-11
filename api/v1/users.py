@@ -1,16 +1,13 @@
 
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, Path, Query
 from fastapi.params import Depends
 
 from typing import List, Annotated
 from uuid import UUID
-from sqlalchemy.exc import IntegrityError
 
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
 
-from models.users import UserModel
-from schemas.users import RequestsUsers, RequestUserToUpdate, ResponsesUsers
+from schemas.users import RequestsUsers, RequestUserToUpdate, ResponsesUsers, ResponseDeleteUsers
 from core.database import get_db
 from service.users_service import UserService
 
@@ -64,7 +61,7 @@ async def partial_update_user(
     return service.update_user(user_id=user_id, update_data=update_user_data)
 
 
-@router.delete("/{user_id}", response_model=ResponsesUsers)
+@router.delete("/{user_id}", response_model=ResponseDeleteUsers)
 async def delete_user(
         user_id: Annotated[UUID, Path(title="ID пользователя")],
         db: Session = Depends(get_db)):
